@@ -7,6 +7,8 @@ from slackclient import SlackClient
 
 PATH = "E:/Documents/Bots/SonnyBot"
 TOKEN = open(PATH + "/token.txt", "r").read()
+END = '_END_'
+START = '_START_'
 
 sc = SlackClient(TOKEN)
 
@@ -71,9 +73,12 @@ def treatEvent(e):
                 print("i,word",i,word)
                 if word in m:
                     if m[word] == 'END_SENTENCE':
-                        m[word] = t[i+1] if i+1 < len(t) else 'END_SENTENCE'
+                        m[word] = t[i+1] if i+1 < len(t) else END
                     m = m[word]
+                else:
+                    m[word] = t[i+1] if i+1 < len(t) else END
                 print(m)
+                
             print(json_decoded)
                 
                 
