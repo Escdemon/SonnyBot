@@ -7,7 +7,7 @@ from slackclient import SlackClient
 
 PATH1 = "E:/Documents/Bots/SonnyBot"
 PATH2 = "C:/Users/paul.neissen/Documents/Bots/SonnyBot"
-PATH = PATH2
+PATH = PATH1
 TOKEN = open(PATH + "/token.txt", "r").read()
 END = '_END_'
 START = '_START_'
@@ -67,11 +67,11 @@ def sendMessagetest():
     )
 
 def treatEvent(e):
-    #for event in e:
-        #if event['type'] == "message":
+    for event in e:
+        if event['type'] == "message":
             m = START
-            #t = event['text'].split()
-            t = ['Bonjour']
+            t = event['text'].split()
+            #t = ['Bonjour']
             print("t",t)
             #TODO : remove forbidden word in t
             if t[0] not in json_decoded[START]:
@@ -79,18 +79,21 @@ def treatEvent(e):
             else:
                 json_decoded[START][t[0]] += 1
             for i,word in enumerate(t):
+                
                 #TODO si c'est le dernier mot
                 #if i == len(t) - 1:
-                 #   json_decode[word] += [END]
+                #   json_decode[word] += [END]
+                nextword = t[i+1] if i+1 < len(t) else END
                 if word not in json_decoded:
                     json_decoded[word] = {}
-                    json_decoded[word][t[i+1] if i+1 < len(t) else END] = 0
-                if (t[i+1] if i+1 < len(t) else END) not in json_decoded[word] :
-                    json_decoded[word][t[i+1] if i+1 < len(t) else END] = 1
+                    json_decoded[word][nextword] = 0
+                if nextword not in json_decoded[word] :
+                    json_decoded[word][nextword] = 1
                 else:
-                    json_decoded[word][t[i+1] if i+1 < len(t) else END] += 1
+                    json_decoded[word][nextword] += 1
             print(json_decoded)
-            
+            with open(PATH + "/data.json", 'w') as json_file:
+               json.dump(json_decoded, json_file)
                 
             '''
             print("i,word",i,word)
@@ -105,9 +108,9 @@ def treatEvent(e):
             #with open(PATH + "/data.json", 'w') as json_file:
              #   json.dump(json_decoded, json_file)'''
 
-treatEvent({})
+#treatEvent({})
 
-'''
+
 while True:
     connect = sc.rtm_connect(auto_reconnect=True)
     print(connect)
@@ -118,10 +121,10 @@ while True:
             if len(e):
                 print(e)
                 treatEvent(e)
+                
 
             time.sleep(1)
         print("End")
     else:
         print("Connection Failed")
 
-'''
