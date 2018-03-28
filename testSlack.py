@@ -5,7 +5,9 @@ import json
 
 from slackclient import SlackClient
 
-PATH = "E:/Documents/Bots/SonnyBot"
+PATH1 = "E:/Documents/Bots/SonnyBot"
+PATH2 = "C:/Users/paul.neissen/Documents/Bots/SonnyBot"
+PATH = PATH2
 TOKEN = open(PATH + "/token.txt", "r").read()
 END = '_END_'
 START = '_START_'
@@ -65,24 +67,30 @@ def sendMessagetest():
     )
 
 def treatEvent(e):
-    for event in e:
-        if event['type'] == "message":
-            m = json_decoded
-            t = event['text'].split()
+    #for event in e:
+        #if event['type'] == "message":
+            m = START
+            #t = event['text'].split()
+            t = ['Bonjour']
             print("t",t)
             #TODO : remove forbidden word in t
+            if t[0] not in json_decoded[START]:
+                json_decoded[START][t[0]] = 1
+            else:
+                json_decoded[START][t[0]] += 1
             for i,word in enumerate(t):
-                print("i,word",i,word)
-                if word in m:
-                    if m[word] == 'END_SENTENCE':
-                        m[word] = t[i+1] if i+1 < len(t) else END
-                    m = m[word]
+                #TODO si c'est le dernier mot
+                #if i == len(t) - 1:
+                 #   json_decode[word] += [END]
+                if word not in json_decoded:
+                    json_decoded[word] = {}
+                    json_decoded[word][t[i+1] if i+1 < len(t) else END] = 0
+                if (t[i+1] if i+1 < len(t) else END) not in json_decoded[word] :
+                    json_decoded[word][t[i+1] if i+1 < len(t) else END] = 1
                 else:
-                    m[word] = t[i+1] if i+1 < len(t) else END
-                print(m)
-                
+                    json_decoded[word][t[i+1] if i+1 < len(t) else END] += 1
             print(json_decoded)
-                
+            
                 
             '''
             print("i,word",i,word)
@@ -97,7 +105,9 @@ def treatEvent(e):
             #with open(PATH + "/data.json", 'w') as json_file:
              #   json.dump(json_decoded, json_file)'''
 
+treatEvent({})
 
+'''
 while True:
     connect = sc.rtm_connect(auto_reconnect=True)
     print(connect)
@@ -114,3 +124,4 @@ while True:
     else:
         print("Connection Failed")
 
+'''
