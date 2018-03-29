@@ -98,18 +98,21 @@ def sendResponse(e):
 
 
 while True:
-    connect = sc.rtm_connect(auto_reconnect=True)
-    print(connect)
-    if connect:
-        print("Connection Succeed")
-        while True:
-            e = sc.rtm_read()
-            if len(e):
-                print(e)
-                treatEvent(e)
-                sendResponse(e)
-            time.sleep(1)
-        print("End")
-    else:
-        print("Connection Failed")
+    try:
+        connect = sc.rtm_connect(auto_reconnect=True)
+        print(connect)
+        if connect:
+            print("Connection Succeed")
+            while True:
+                e = sc.rtm_read()
+                if len(e):
+                    print(e)
+                    treatEvent(e)
+                    sendResponse(e)
+                time.sleep(1)
+            print("End")
+        else:
+            print("Connection Failed")
+    except:
+        continue
 
