@@ -86,6 +86,7 @@ def sentenceToSay():
     
 
 def sendResponse(e):
+    # peut être juste prendre le premiers event ?
     for event in e:
         if event['type'] == "message":
             text = event['text'].lower().split()
