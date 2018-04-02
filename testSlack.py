@@ -1,5 +1,6 @@
 import time
 import json
+import sys
 
 from random import randint
 from slackclient import SlackClient
@@ -9,6 +10,9 @@ END = '_END_'
 START = '_START_'
 NICK = '_NICK_'
 NICK_LIST = ["sonny", "<@U87N79D25>".lower()]
+DATA_FILE = "data.json"
+CUTTIE_DATA_FILE = "cuttie-data.json"
+CUTTIE_ID = "<@U87N79D25>"
 
 sc = SlackClient(TOKEN)
 
@@ -24,11 +28,14 @@ for i in userList['members']:
 
 # Channel list
 channelList = sc.api_call("channels.list", exclude_archived = 1)
+for i in channelList['channels']:
+    print(i['name'] + " " + i['id'])
+    
 groupList = sc.api_call("groups.list", exclude_archived = 1)
 
 # Load Data
-with open("data.json") as json_file:
-    jsonDecoded = json.load(json_file)
+with open(DATA_FILE) as json_file:
+    jsonData = json.load(json_file)
 
 
 def sendMessage(msg, channelTarget):
@@ -48,22 +55,22 @@ def treatEvent(e):
                 if e.lower() in NICK_LIST:
                     t[i] = NICK
             #TODO : remove forbidden word in t
-            if t[0] not in jsonDecoded[START]:
-                jsonDecoded[START][t[0]] = 1
+            if t[0] not in jsonData[START]:
+                jsonData[START][t[0]] = 1
             else:
-                jsonDecoded[START][t[0]] += 1
+                jsonData[START][t[0]] += 1
             for i,word in enumerate(t):
                 nextword = t[i+1] if i+1 < len(t) else END
-                if word not in jsonDecoded:
-                    jsonDecoded[word] = {}
-                    jsonDecoded[word][nextword] = 0
-                if nextword not in jsonDecoded[word] :
-                    jsonDecoded[word][nextword] = 1
+                if word not in jsonData:
+                    jsonData[word] = {}
+                    jsonData[word][nextword] = 0
+                if nextword not in jsonData[word] :
+                    jsonData[word][nextword] = 1
                 else:
-                    jsonDecoded[word][nextword] += 1
-            print(jsonDecoded)
-            with open("data.json", 'w') as jsonFile:
-               json.dump(jsonDecoded, jsonFile)
+                    jsonData[word][nextword] += 1
+            print(jsonData)
+            with open(DATA_FILE, 'w') as jsonFile:
+               json.dump(jsonData, jsonFile)
                 
 def sentenceToSay():
     r = []
@@ -71,10 +78,10 @@ def sentenceToSay():
     while m != END:
         score = 0
         tmp = ""
-        total = sum(jsonDecoded[m].values())
+        total = sum(jsonData[m].values())
         rand = randint(0, total-1)
-        for i in jsonDecoded[m]:
-            score += jsonDecoded[m][i]
+        for i in jsonData[m]:
+            score += jsonData[m][i]
             if score > rand:
                 tmp = i
                 break
@@ -96,12 +103,12 @@ def sendResponse(e):
                 sentence = sentenceToSay().replace(NICK, users[event['user']])
                 #print(sentence)
                 sendMessage(sentence, event['channel'])
-
+                
 
 while True:
     try:
         connect = sc.rtm_connect(auto_reconnect=True)
-        print(connect)
+        #print(connect)
         if connect:
             print("Connection Succeed")
             while True:
@@ -114,6 +121,8 @@ while True:
             print("End")
         else:
             print("Connection Failed")
+    except KeyboardInterrupt:
+        sys.exit()
     except:
         continue
 
