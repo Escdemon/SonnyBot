@@ -12,7 +12,8 @@ NICK = '_NICK_'
 NICK_LIST = ["sonny", "<@U87N79D25>".lower()]
 DATA_FILE = "data.json"
 CUTTIE_DATA_FILE = "cuttie-data.json"
-CUTTIE_ID = "<@U87N79D25>"
+CUTTIE_ID = "<@U7UG5HLLV>"
+CUTTIE = "U7UG5HLLV"
 
 sc = SlackClient(TOKEN)
 
@@ -36,7 +37,10 @@ groupList = sc.api_call("groups.list", exclude_archived = 1)
 # Load Data
 with open(DATA_FILE) as json_file:
     jsonData = json.load(json_file)
-
+    
+# Load Data
+with open(CUTTIE_DATA_FILE) as json_file:
+    jsonCuttieData = json.load(json_file)
 
 def sendMessage(msg, channelTarget):
     sc.api_call(
@@ -46,6 +50,27 @@ def sendMessage(msg, channelTarget):
       as_user = "true"
     )
 
+def saveCuttieData(t):
+    for i,e in enumerate(t):
+        if e.lower() in NICK_LIST:
+            t[i] = NICK
+    #TODO : remove forbidden word in t
+    if t[0] not in jsonCuttieData[START]:
+        jsonCuttieData[START][t[0]] = 1
+    else:
+        jsonCuttieData[START][t[0]] += 1
+    for i,word in enumerate(t):
+        nextword = t[i+1] if i+1 < len(t) else END
+        if word not in jsonCuttieData:
+            jsonCuttieData[word] = {}
+            jsonCuttieData[word][nextword] = 0
+        if nextword not in jsonCuttieData[word] :
+            jsonCuttieData[word][nextword] = 1
+        else:
+            jsonCuttieData[word][nextword] += 1
+    print(jsonCuttieData)
+    with open(CUTTIE_DATA_FILE, 'w') as jsonFile:
+       json.dump(jsonCuttieData, jsonFile)
 
 def treatEvent(e):
     for event in e:
@@ -71,17 +96,20 @@ def treatEvent(e):
             print(jsonData)
             with open(DATA_FILE, 'w') as jsonFile:
                json.dump(jsonData, jsonFile)
+               
+            if any(x == CUTTIE_ID for x in t):
+                saveCuttieData(t)
                 
-def sentenceToSay():
+def sentenceToSay(data):
     r = []
     m = START
     while m != END:
         score = 0
         tmp = ""
-        total = sum(jsonData[m].values())
+        total = sum(data[m].values())
         rand = randint(0, total-1)
-        for i in jsonData[m]:
-            score += jsonData[m][i]
+        for i in data[m]:
+            score += data[m][i]
             if score > rand:
                 tmp = i
                 break
@@ -93,14 +121,16 @@ def sentenceToSay():
     
 
 def sendResponse(e):
-    # peut être juste prendre le premiers event ?
+    # peut être juste prendre le premier event ?
     for event in e:
         if event['type'] == "message":
+            t = event['text'].split()
             text = event['text'].lower().split()
             if any(word in text for word in NICK_LIST):
                 text = ["Bob" if any(x == word for word in NICK_LIST) else x for x in text]
                 #print(text)
-                sentence = sentenceToSay().replace(NICK, users[event['user']])
+                
+                sentence = sentenceToSay(jsonCuttieData if event['user'] == CUTTIE else jsonData).replace(NICK, users[event['user']])
                 #print(sentence)
                 sendMessage(sentence, event['channel'])
                 
