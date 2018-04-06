@@ -69,7 +69,7 @@ def saveCuttieData(t):
             jsonCuttieData[word][nextword] = 1
         else:
             jsonCuttieData[word][nextword] += 1
-    print(jsonCuttieData)
+    #print(jsonCuttieData)
     with open(CUTTIE_DATA_FILE, 'w') as jsonFile:
        json.dump(jsonCuttieData, jsonFile)
 
@@ -95,7 +95,7 @@ def treatEvent(e):
                         jsonData[word][nextword] = 1
                     else:
                         jsonData[word][nextword] += 1
-                print(jsonData)
+                #print(jsonData)
                 with open(DATA_FILE, 'w') as jsonFile:
                    json.dump(jsonData, jsonFile)
                    
@@ -156,22 +156,27 @@ def music(e):
                                 d[tmp[0]] = [tmp[1]]
                             else:
                                 d[tmp[0]] += [tmp[1]]
-                    print(d)
+                    #print(d)
                     
                     if any(word == 'add' for word in text):
                         t = [x for x in t if x not in ['music','Music','MUSIC','metal','Metal','METAL','Dub','dub','DUB',
                                                        'reggae','Reggae','REGGAE','<@U87N79D25>','Sonny','sonny','SONNY',
                                                        'add','Add','ADD','other','Other']]
                         with open('music.txt', 'a') as file:
-                            
+                            written = True
                             if any(word == 'metal' for word in text):
                                 file.write('METAL ' + ''.join(t) + '\n')
                             elif any(word == 'dub' for word in text):
                                 file.write('DUB ' + ''.join(t) + '\n')
+                                sendMessage(' '.join(d['METAL']), event['channel'])
                             elif any(word == 'reggae' for word in text):
                                 file.write('REGGAE ' + ''.join(t) + '\n')
                             elif any(word == 'other' for word in text):
                                 file.write('OTHER ' + ''.join(t) + '\n')
+                            else:
+                                written = False
+                            if written:
+                                sendMessage(''.join(t) + " added", event['channel'])
                         return True
                     
                     if any(word == 'metal' for word in text) and 'METAL' in d:
