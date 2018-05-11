@@ -12,8 +12,8 @@ NICK = '_NICK_'
 NICK_LIST = ["sonny", "<@U87N79D25>".lower()]
 DATA_FILE = "data.json"
 CUTTIE_DATA_FILE = "cuttie-data.json"
-CUTTIE_ID = "<@U7UG5HLLV>"
-CUTTIE = "U7UG5HLLV"
+CUTTIE_ID = '<@UAMN8260P>'
+CUTTIE = "UAMN8260P"
 MUSIC_CHAN = 'G9YB0SM96'
 
 sc = SlackClient(TOKEN)
@@ -76,12 +76,13 @@ def saveCuttieData(t):
 def treatEvent(e):
     for event in e:
         if 'text' in event:
-            if event['type'] == "message" and event['user'] != 'U87N79D25'  and event['channel'] != MUSIC_CHAN:
+            if event['type'] == "message" and ('user' in event and event['user'] != 'U87N79D25' or 'bot_id' in event and event['bot_id'] != 'U87N79D25')  and event['channel'] != MUSIC_CHAN:
                 t = event['text'].split()
                 for i,e in enumerate(t):
                     if e.lower() in NICK_LIST:
                         t[i] = NICK
                 #TODO : remove forbidden word in t
+                
                 if t[0] not in jsonData[START]:
                     jsonData[START][t[0]] = 1
                 else:
@@ -98,8 +99,13 @@ def treatEvent(e):
                 #print(jsonData)
                 with open(DATA_FILE, 'w') as jsonFile:
                    json.dump(jsonData, jsonFile)
-                   
-                if any(x == CUTTIE_ID for x in t):
+                
+                b = 0
+                for j in t:
+                    if j == NICK:
+                        b = 1 
+                        break
+                if any(x == CUTTIE_ID for x in t) and not(b):
                     saveCuttieData(t)
                 
 def sentenceToSay(data):
@@ -128,14 +134,25 @@ def sendResponse(e):
         if event['type'] == "message":
             if 'text' in event:
                 t = event['text'].split()
-                text = event['text'].lower().split()
-                if any(word in text for word in NICK_LIST):
-                    text = ["Bob" if any(x == word for word in NICK_LIST) else x for x in text]
-                    #print(text)
-                    
-                    sentence = sentenceToSay(jsonCuttieData if event['user'] == CUTTIE else jsonData).replace(NICK, users[event['user']])
-                    #print(sentence)
-                    sendMessage(sentence, event['channel'])
+                b = 0
+                for j in t:
+                    if j == CUTTIE_ID:
+                        b = 1 
+                        break
+                #if not(any(x == CUTTIE_ID for x in t)):
+                if not(b):
+                    text = event['text'].lower().split()
+                    if any(word in text for word in NICK_LIST):
+                        text = ["Bob" if any(x == word for word in NICK_LIST) else x for x in text]
+                        #print(text)
+                        sentence = ""
+                        if 'user' in event:
+                            sentence = sentenceToSay(jsonCuttieData if event['user'] == CUTTIE else jsonData).replace(NICK, users[event['user']])
+                        elif 'bot_id' in event:
+                            sentence = sentenceToSay(jsonCuttieData if event['bot_id'] == CUTTIE else jsonData).replace(NICK, users[event['bot_id']])
+    
+                        #print(sentence)
+                        sendMessage(sentence, event['channel'])
                 
 
 def music(e):
@@ -193,6 +210,7 @@ def music(e):
                         return True
                 
     return False
+
 
 while True:
     #try:
